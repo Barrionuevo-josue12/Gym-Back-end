@@ -2,13 +2,13 @@ package gimnasios.com.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
 
 @Setter @Getter
-@Builder
-@AllArgsConstructor
+@SuperBuilder
 @Table (name = "afiliados")
 @Entity
 @NoArgsConstructor
@@ -33,4 +33,16 @@ public  abstract class Afiliado {
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "sucursal_id") // Define la columna FK en la tabla
     private Sucursal sucursal;
+
+    @Override
+    public String toString() {
+        return "Afiliado{" +
+                "afiliadoId=" + afiliadoId +
+                ", nombreCompleto='" + nombreCompleto + '\'' +
+                ", email='" + email + '\'' +
+                ", dni='" + dni + '\'' +
+                ", fechaNacimiento=" + fechaNacimiento +
+                ", sucursal=" + sucursal +
+                '}';
+    }
 }
