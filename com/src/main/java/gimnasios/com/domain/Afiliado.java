@@ -31,7 +31,7 @@ public  abstract class Afiliado {
     private LocalDate fechaNacimiento;
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JoinColumn(name = "sucursal_id") // Define la columna FK en la tabla
+    @JoinColumn(name = "sucursal_id",nullable = true) // Define la columna FK en la tabla
     private Sucursal sucursal;
 
     @Override

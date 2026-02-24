@@ -2,9 +2,10 @@ package gimnasios.com.mapper;
 
 import gimnasios.com.domain.Sucursal;
 import gimnasios.com.dto.SucursalDto;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-
+@Component
 public class SucursalMapper {
     public  Sucursal toSucursalEntity(SucursalDto dto){
         LocalDateTime fecha = LocalDateTime.parse(dto.getHorarioApertura());

@@ -3,8 +3,14 @@ package gimnasios.com.mapper;
 import gimnasios.com.domain.AfiliadoCorporativo;
 import gimnasios.com.domain.AfiliadoIndependiente;
 import gimnasios.com.dto.AfiliadoCorporativoDto;
+import gimnasios.com.dto.AfiliadoCorporativoRequestDto;
 import gimnasios.com.dto.AfiliadoIndependienteDto;
+import gimnasios.com.util.GimnasioUtil;
+import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
+@Component
 public class AfiliadoMapper {
 
     public AfiliadoCorporativo toAfiliadoCorporativoEntity(AfiliadoCorporativoDto dto) {
@@ -44,5 +50,24 @@ public class AfiliadoMapper {
                 .nombreEmpresa(entidad.getNombreEmpresa())
                 .sucursalId(entidad.getSucursal().getIdSucursal()) //podria haber error de lazy initialization
                 .build();
+    }
+    public AfiliadoCorporativo toAfiliadoCorporativoSinceRequestDto(AfiliadoCorporativo entity, AfiliadoCorporativoRequestDto dto) {
+        if (GimnasioUtil.stringOk(dto.getNombreCompleto())) {
+            entity.setNombreCompleto(dto.getNombreCompleto());
+        }
+        if (GimnasioUtil.stringOk(dto.getEmail())) {
+            entity.setEmail(dto.getEmail());
+        }
+        if (GimnasioUtil.stringOk(dto.getFechaNacimiento())) {
+            LocalDate fecha = LocalDate.parse(dto.getFechaNacimiento());
+            entity.setFechaNacimiento(fecha);
+        }
+        if (GimnasioUtil.stringOk(dto.getNombreEmpresa())) {
+            entity.setNombreEmpresa(dto.getNombreEmpresa());
+        }
+        if (GimnasioUtil.stringOk(dto.getCuit())) {
+            entity.setCuit(dto.getCuit());
+        }
+        return entity;
     }
 }

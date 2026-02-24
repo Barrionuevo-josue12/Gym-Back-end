@@ -1,15 +1,17 @@
 package gimnasios.com.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Builder
 @Setter @Getter
 @AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table (name = "pagos")
 public class Pago {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPago;
     private Double importePago;
     private String conceptoPago;
