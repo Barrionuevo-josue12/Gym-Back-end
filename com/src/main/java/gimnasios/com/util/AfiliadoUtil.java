@@ -1,9 +1,8 @@
 package gimnasios.com.util;
 
-import gimnasios.com.dto.AfiliadoCorporativoDto;
-import gimnasios.com.dto.AfiliadoDto;
-import gimnasios.com.dto.AfiliadoIndependienteDto;
+import gimnasios.com.dto.*;
 import gimnasios.com.exception.AfiliadoException;
+import gimnasios.com.exception.ReglaDeNegocioException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,6 +50,25 @@ public class AfiliadoUtil {
         if(dto.getTelefono() == null || dto.getTelefono().isBlank()){
             log.error("afiliado independiente con telefono incorrecto{}",dto);
             throw new AfiliadoException("afiliado independiente con telefono incorrecto "+dto);
+        }
+    }
+    public static void validarActualizacionAfiliadoIndependiente(AfiliadoIndependienteRequestDto dto){
+        boolean allNull = dto.getAptoFisico() == null && dto.getTelefono() == null;
+        if(allNull && allAfiliatesAtributtesAreNull(dto)){
+            log.error("Se ha intentado actualizar un afiliado independiente, donde todos sus valores son nulls/vacios {}",dto);
+            throw new ReglaDeNegocioException("Se ha  Se ha intentado actualizar un afiliado independiente, donde todos sus valores son nulls");
+        }
+    }
+
+    public static boolean allAfiliatesAtributtesAreNull(AfiliadoRequestDto dto){
+        return (dto.getEmail() == null && dto.getSucursalId() == null && dto.getNombreCompleto() == null && dto.getFechaNacimiento() == null);
+    }
+
+    public static void validarActualizacionAfiliadoCorporativo(AfiliadoCorporativoRequestDto dto){
+        boolean allNull = dto.getNombreEmpresa() == null && dto.getCuit() == null;
+        if(allAfiliatesAtributtesAreNull(dto) && allNull){
+            log.error("Se ha intentado actualizar un afiliado corporativo, cuyos valores son vacios {} ",dto);
+            throw new ReglaDeNegocioException("Se ha intentado actualizar un afiliado corporativo, cuyos valores son vacions "+dto);
         }
     }
 }
