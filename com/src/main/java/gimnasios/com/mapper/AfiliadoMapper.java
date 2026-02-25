@@ -1,10 +1,9 @@
 package gimnasios.com.mapper;
 
+import gimnasios.com.domain.Afiliado;
 import gimnasios.com.domain.AfiliadoCorporativo;
 import gimnasios.com.domain.AfiliadoIndependiente;
-import gimnasios.com.dto.AfiliadoCorporativoDto;
-import gimnasios.com.dto.AfiliadoCorporativoRequestDto;
-import gimnasios.com.dto.AfiliadoIndependienteDto;
+import gimnasios.com.dto.*;
 import gimnasios.com.util.GimnasioUtil;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +50,32 @@ public class AfiliadoMapper {
                 .sucursalId(entidad.getSucursal().getIdSucursal()) //podria haber error de lazy initialization
                 .build();
     }
+
     public AfiliadoCorporativo toAfiliadoCorporativoSinceRequestDto(AfiliadoCorporativo entity, AfiliadoCorporativoRequestDto dto) {
+        entity = (AfiliadoCorporativo) toAfiliadoSinceRequestDto(entity,dto);
+        if (GimnasioUtil.stringOk(dto.getNombreEmpresa())) {
+            entity.setNombreEmpresa(dto.getNombreEmpresa());
+        }
+        if (GimnasioUtil.stringOk(dto.getCuit())) {
+            entity.setCuit(dto.getCuit());
+        }
+        return entity;
+    }
+
+    public AfiliadoIndependiente toAfiliadoIndependienteSinceRequestDto(AfiliadoIndependiente entity, AfiliadoIndependienteRequestDto dto){
+        entity = (AfiliadoIndependiente) toAfiliadoSinceRequestDto(entity,dto);
+        if(dto.getAptoFisico() != null){
+            entity.setAptoFisico(dto.getAptoFisico());
+        }
+        if(GimnasioUtil.stringOk(dto.getTelefono())){
+            entity.setTelefono(dto.getTelefono());
+        }
+        return  entity;
+    }
+
+
+    //el polimorfismo en su maxima expresion
+    public Afiliado toAfiliadoSinceRequestDto(Afiliado entity, AfiliadoRequestDto dto){
         if (GimnasioUtil.stringOk(dto.getNombreCompleto())) {
             entity.setNombreCompleto(dto.getNombreCompleto());
         }
@@ -62,12 +86,15 @@ public class AfiliadoMapper {
             LocalDate fecha = LocalDate.parse(dto.getFechaNacimiento());
             entity.setFechaNacimiento(fecha);
         }
-        if (GimnasioUtil.stringOk(dto.getNombreEmpresa())) {
-            entity.setNombreEmpresa(dto.getNombreEmpresa());
-        }
-        if (GimnasioUtil.stringOk(dto.getCuit())) {
-            entity.setCuit(dto.getCuit());
-        }
         return entity;
+    }
+
+    public AfiliadoDto toDto(Afiliado entity){
+       if(entity instanceof AfiliadoIndependiente afiIndp){
+           return toAfiliadoIndependienteDto(afiIndp);
+       } else if (entity instanceof  AfiliadoCorporativo afiCorp) {
+           return toAfiliadoCorporativoDto(afiCorp);
+       }
+       else return null;
     }
 }
