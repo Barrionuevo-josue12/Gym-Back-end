@@ -4,10 +4,7 @@ import gimnasios.com.domain.Afiliado;
 import gimnasios.com.domain.AfiliadoCorporativo;
 import gimnasios.com.domain.AfiliadoIndependiente;
 import gimnasios.com.domain.Sucursal;
-import gimnasios.com.dto.AfiliadoCorporativoDto;
-import gimnasios.com.dto.AfiliadoCorporativoRequestDto;
-import gimnasios.com.dto.AfiliadoIndependienteDto;
-import gimnasios.com.dto.AfiliadoIndependienteRequestDto;
+import gimnasios.com.dto.*;
 import gimnasios.com.exception.RecursoNoEncontradoException;
 import gimnasios.com.exception.ReglaDeNegocioException;
 import gimnasios.com.mapper.AfiliadoMapper;
@@ -15,12 +12,12 @@ import gimnasios.com.repository.AfiliadoRepository;
 import gimnasios.com.repository.SucursalRepository;
 import gimnasios.com.service.AfiliadoService;
 import gimnasios.com.util.AfiliadoUtil;
+import gimnasios.com.util.GimnasioUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -49,6 +46,7 @@ public class AfiliadoServiceImp implements AfiliadoService {
                     log.error("Se ha intentado crear un afiliado corporativo, cuya sucursal no existe {}", dto);
                     return new RecursoNoEncontradoException("La sucursal con id: " + dto.getSucursalId() + " no existe");
                 });
+
         //traspaso de datos dto -> entidad
         AfiliadoCorporativo afi = afiliadoMapper.toAfiliadoCorporativoEntity(dto);
         afi.setSucursal(sucursal);
@@ -60,6 +58,7 @@ public class AfiliadoServiceImp implements AfiliadoService {
     }
 
     @Override
+    @Transactional
     public AfiliadoIndependienteDto crearAfiliadoIndependienteDto(AfiliadoIndependienteDto dto) {
         log.info("Se esta intentando crear un nuevo afiliado independiente...");
         AfiliadoUtil.validarAfiliadoIndependiente(dto);
@@ -87,11 +86,7 @@ public class AfiliadoServiceImp implements AfiliadoService {
         log.info("Se esta intentando actualizar un afiliado corporativo...");
 
         //busqueda del afiliado
-        Afiliado afi =  afiliadoRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Se ha intentado actualizar un afiliado que no existe. con id: {}", id);
-                    return new RecursoNoEncontradoException("Afiliado con id: " + id+ " no existe");
-                });
+        Afiliado afi =  foundAfiliateOrThrowException(id);
 
         //verificacion del tipo de afiliado
         if(!(afi instanceof AfiliadoCorporativo wanted)){
@@ -99,8 +94,8 @@ public class AfiliadoServiceImp implements AfiliadoService {
             throw  new ReglaDeNegocioException("Se ha intentado actualizar un afiliado corporativo, con un id de otro tipo de afiliado: "+id);
         }
 
-        //AfiliadoUtil.ValidarActualizacionAfiliadoCorporativo(dto);
-        if(dto.getSucursalId() != null){
+        AfiliadoUtil.validarActualizacionAfiliadoCorporativo(dto);
+        if(dto.getSucursalId() != null && !wanted.getSucursal().getIdSucursal().equals(dto.getSucursalId())){
             Sucursal sucursal = sucursalRepository.findById(dto.getSucursalId())
                     .orElseThrow(() -> {
                         log.error("Se ha intentado actualizar un afiliado corporativo, cuya sucursal no existe {}", dto);
@@ -108,6 +103,14 @@ public class AfiliadoServiceImp implements AfiliadoService {
                     });
             //se cambia la sucursal, en el caso de que se desee cambiarla.
             wanted.setSucursal(sucursal);
+        }
+
+        //validar que el email sea unico
+        if(GimnasioUtil.stringOk(dto.getEmail())
+                && afiliadoRepository.existByEmail(dto.getEmail())
+        && !dto.getEmail().equals(afi.getEmail())){
+            log.error("Se ha intentado actualizar un Afiliado Corporativo con un email que ya existe {}",dto);
+            throw new ReglaDeNegocioException("Se ha intentado actualizar un Afiliado corporativo con un email existente: "+dto.getEmail());
         }
 
         //se actualizan los datos desde el dto a la entidad (se mantienen, los que no se desean actualizar)
@@ -118,28 +121,90 @@ public class AfiliadoServiceImp implements AfiliadoService {
 
     }
 
+    private Afiliado foundAfiliateOrThrowException(Long id){
+        Afiliado afi = afiliadoRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("EL afiliado  con id: {} no existe", id);
+                    return new RecursoNoEncontradoException("Afiliado con id: " + id+ " no existe");
+                });
+        return afi;
+    }
+
+
     @Override
+    @Transactional
     public AfiliadoIndependienteDto actualizarAfiliadoIndependienteDto(Long id, AfiliadoIndependienteRequestDto dto) {
-        return null;
+        log.info("Se esta intentando actualizar un afiliado independiente...");
+
+        //busqueda del afiliado
+        Afiliado afi =  foundAfiliateOrThrowException(id);
+
+        //verificacion del tipo de afiliado
+        if(!(afi instanceof AfiliadoIndependiente wanted)){
+            log.error("se ha intentando actualizar un afiliado independiente, con un id que no pertenece a dicho tipo de afiliado {}",id);
+            throw  new ReglaDeNegocioException("Se ha intentado actualizar un afiliado independiente, con un id de otro tipo de afiliado: "+id);
+        }
+
+        AfiliadoUtil.validarActualizacionAfiliadoIndependiente(dto);
+        if(dto.getSucursalId() != null && !wanted.getSucursal().getIdSucursal().equals(dto.getSucursalId())){
+            Sucursal sucursal =  sucursalRepository.findById(dto.getSucursalId())
+                    .orElseThrow(() -> {
+                        log.error("Se ha intentado actualizar un afiliado independiente, cuya sucursal no existe {}", dto);
+                        return new RecursoNoEncontradoException("La sucursal con id: " + dto.getSucursalId() + " no existe");
+                    });
+            //se cambia la sucursal, en el caso de que se desee cambiarla.
+            wanted.setSucursal(sucursal);
+        }
+
+        //validar que el email sea unico
+        if(GimnasioUtil.stringOk(dto.getEmail())
+                && afiliadoRepository.existByEmail(dto.getEmail())
+                && !dto.getEmail().equals(afi.getEmail())){
+            log.error("Se hai intentado actualizar un Afiliado independiente con un email que ya existe {}",dto);
+            throw new ReglaDeNegocioException("Se ha intentado actualizar un Afiliado independiente con un email existente: "+dto.getEmail());
+        }
+
+        //se actualizan los datos desde el dto a la entidad (se mantienen, los que no se desean actualizar)
+        wanted = afiliadoMapper.toAfiliadoIndependienteSinceRequestDto(wanted,dto);
+
+        log.info("afiliado independiente actualizado con exito. Cuyo id es: {}",wanted.getAfiliadoId());
+        return afiliadoMapper.toAfiliadoIndependienteDto((afiliadoRepository.save(wanted)));
     }
 
     @Override
     public void borrarAfiliadoPorId(Long id) {
-
+        if(!afiliadoRepository.existsById(id)){
+            log.error("Se ha intentado borrar un afiliado inexistente. Id: {}",id);
+            throw new RecursoNoEncontradoException("El afiliado con id: "+id+ " no existe");
+        }
+        afiliadoRepository.deleteById(id);
     }
 
     @Override
-    public List<Afiliado> listarAfiliados() {
-        return List.of();
+    public List<AfiliadoDto> listarAfiliados() {
+        return afiliadoRepository.findAll()
+                .stream() // 1. Ponemos la lista en la "cinta transportadora"
+                .map(afiliadoMapper::toDto) // 2. Transformamos cada Entidad a DTO
+                .toList(); // 3. Lo empaquetamos todo en una lista
     }
 
     @Override
     public AfiliadoIndependienteDto obtenerAfiliadoIndPorId(Long id) {
-        return null;
+        Afiliado afi = foundAfiliateOrThrowException(id);
+        if(!(afi instanceof AfiliadoIndependiente wanted)){
+            log.warn("Se ha intentado obtener un afiliado que no es del tipo independiente. Con el id: {}",id);
+            throw new RecursoNoEncontradoException("No existe un afiliado independiente con id: "+id);
+        }
+        return afiliadoMapper.toAfiliadoIndependienteDto ((AfiliadoIndependiente) wanted);
     }
 
     @Override
     public AfiliadoCorporativoDto obtenerAfiliadoCorporId(long id) {
-        return null;
+        Afiliado afi = foundAfiliateOrThrowException(id);
+        if(!(afi instanceof AfiliadoCorporativo wanted)){
+            log.warn("Se ha intentado obtener un afiliado que no es del tipo corporativo. Con el id: {}",id);
+            throw new RecursoNoEncontradoException("No existe un afiliado corporativo con id: "+id);
+        }
+        return afiliadoMapper.toAfiliadoCorporativoDto ((AfiliadoCorporativo) wanted);
     }
 }
