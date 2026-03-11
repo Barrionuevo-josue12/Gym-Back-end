@@ -9,9 +9,9 @@ import lombok.Setter;
 @Builder
 @Setter @Getter
 @AllArgsConstructor
-public class PagoDto {
-    private Long idPago;
-    private Double importePago;
-    private String conceptoPago;
+public class PaymentDto {
+    private Long paymentId;
+    private Double total;
+    private String paymentConcept;
     private Long afiliadoId;
 }
