@@ -125,7 +125,7 @@ public class AfiliadoServiceImp implements AfiliadoService {
         Afiliado afi = afiliadoRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("EL afiliado  con id: {} no existe", id);
-                    return new RecursoNoEncontradoException("Afiliado con id: " + id+ " no existe");
+                    throw  new RecursoNoEncontradoException("Afiliado con id: " + id+ " no existe");
                 });
         return afi;
     }
