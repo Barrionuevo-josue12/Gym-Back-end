@@ -91,7 +91,7 @@ public class AfiliadoServiceImp implements AfiliadoService {
         //verificacion del tipo de afiliado
         if(!(afi instanceof AfiliadoCorporativo wanted)){
             log.error("se ha intentando actualizar un afiliado corporativo, con un id que no pertenece a dicho tipo de afiliado {}",id);
-            throw  new ReglaDeNegocioException("Se ha intentado actualizar un afiliado corporativo, con un id de otro tipo de afiliado: "+id);
+            throw  new ReglaDeNegocioException("Se ha intentado actualizar un afiliado corporativo, con un id de otro tipo de afiliado. Id: "+id);
         }
 
         AfiliadoUtil.validarActualizacionAfiliadoCorporativo(dto);

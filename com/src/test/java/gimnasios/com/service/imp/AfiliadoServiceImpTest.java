@@ -2,11 +2,13 @@ package gimnasios.com.service.imp;
 
 import gimnasios.com.domain.Afiliado;
 import gimnasios.com.domain.AfiliadoCorporativo;
+import gimnasios.com.domain.AfiliadoIndependiente;
 import gimnasios.com.domain.Sucursal;
 import gimnasios.com.dto.AfiliadoCorporativoDto;
 import gimnasios.com.dto.AfiliadoCorporativoRequestDto;
 import gimnasios.com.dto.AfiliadoRequestDto;
 import gimnasios.com.exception.RecursoNoEncontradoException;
+import gimnasios.com.exception.ReglaDeNegocioException;
 import gimnasios.com.mapper.AfiliadoMapper;
 import gimnasios.com.repository.AfiliadoRepository;
 import gimnasios.com.repository.SucursalRepository;
@@ -46,6 +48,10 @@ class AfiliadoServiceImpTest {
     private AfiliadoCorporativo afiCorp;
     private AfiliadoCorporativoDto dto;
     private AfiliadoCorporativoRequestDto corpRequestDto;
+    private  AfiliadoCorporativo expectedAffiliate;
+    private   AfiliadoCorporativoDto affiliateReturnedForUser;
+    private   AfiliadoCorporativoRequestDto affiliateToUpdate;
+    private AfiliadoIndependiente indAfi;
 
     @BeforeEach
     void setUp(){
@@ -76,6 +82,39 @@ class AfiliadoServiceImpTest {
                 .nombreCompleto("Josue Barrionuevo")
                 .build();
 
+        expectedAffiliate = AfiliadoCorporativo.builder().cuit("33434")
+                .afiliadoId(1L)
+                .sucursal(suc)
+                .nombreEmpresa("Mercado Libre")
+                .email("barrionuevoDevJosue12@gmail.com")
+                .nombreCompleto("Josue Barrionuevo")
+                .dni("4545")
+                .build();
+        affiliateReturnedForUser = AfiliadoCorporativoDto.builder().
+                cuit("33434")
+                .sucursalId(suc.getIdSucursal())
+                .afiliadoId(1L)
+                .nombreEmpresa("Mercado Libre")
+                .email("barrionuevoDevJosue12@gmail.com")
+                .nombreCompleto("Josue Barrionuevo")
+                .dni("4545")
+                .build();
+
+        affiliateToUpdate = AfiliadoCorporativoRequestDto.builder().
+                cuit("33434")
+                .sucursalId(suc.getIdSucursal())
+                .nombreEmpresa("Mercado Libre")
+                .email("barrionuevoDevJosue12@gmail.com")
+                .nombreCompleto("Josue Barrionuevo")
+                .build();
+        indAfi = AfiliadoIndependiente.builder()
+                .telefono("3886309154")
+                .afiliadoId(21L)
+                .dni("3030303")
+                .aptoFisico(Boolean.TRUE)
+                .nombreCompleto("Angelica Gonzalez")
+                .email("Angelica21@gmail.com")
+                .sucursal(null).build();
     }
 
     @Test
@@ -145,33 +184,6 @@ class AfiliadoServiceImpTest {
     @DisplayName("Update Corporative Affiliate")
     void updateCorporativeAffiliate(){
         Long affiliateCorpId = 1L, locationId = 1L;
-        AfiliadoCorporativo expectedAffiliate = AfiliadoCorporativo.builder().cuit("33434")
-                .afiliadoId(1L)
-                .sucursal(suc)
-                .nombreEmpresa("Mercado Libre")
-                .email("barrionuevoDevJosue12@gmail.com")
-                .nombreCompleto("Josue Barrionuevo")
-                .dni("4545")
-                .build();
-
-        AfiliadoCorporativoDto affiliateReturnedForUser = AfiliadoCorporativoDto.builder().
-        cuit("33434")
-                .sucursalId(suc.getIdSucursal())
-                .afiliadoId(1L)
-                .nombreEmpresa("Mercado Libre")
-                .email("barrionuevoDevJosue12@gmail.com")
-                .nombreCompleto("Josue Barrionuevo")
-                .dni("4545")
-                .build();
-
-        //user send this in json format
-        AfiliadoCorporativoRequestDto affiliateToUpdate = AfiliadoCorporativoRequestDto.builder().
-        cuit("33434")
-                .sucursalId(suc.getIdSucursal())
-                .nombreEmpresa("Mercado Libre")
-                .email("barrionuevoDevJosue12@gmail.com")
-                .nombreCompleto("Josue Barrionuevo")
-                .build();
 
         //given
         when(afiliadoRepository.findById(affiliateCorpId)).thenReturn(Optional.of(afiCorp));
@@ -196,5 +208,46 @@ class AfiliadoServiceImpTest {
         verify(afiliadoMapper).toAfiliadoCorporativoSinceRequestDto(any(AfiliadoCorporativo.class),any(AfiliadoCorporativoRequestDto.class));
         verify(afiliadoRepository).save(any(AfiliadoCorporativo.class));
         verify(afiliadoMapper).toAfiliadoCorporativoDto(any(AfiliadoCorporativo.class));
+    }
+
+    @Test
+    @DisplayName("Don't update an corporative affiliate trows exception")
+    void doNotUpdateCorporativeAffiliateDistinctAffiliateTypes(){
+        Long indAffiliateId = 20L;
+
+        //given
+        when(afiliadoRepository.findById(indAffiliateId)).thenReturn(Optional.of(indAfi));
+
+        //when
+        assertThatThrownBy(()->afiliadoServiceImp.actualizarAfiliadoCorporativoDto(indAffiliateId,corpRequestDto))
+                .isInstanceOf(ReglaDeNegocioException.class)
+                .hasMessageContaining("Se ha intentado actualizar un afiliado corporativo, con un id de otro tipo de afiliado. Id: "+indAffiliateId);
+
+        //then
+        verify(afiliadoRepository).findById(indAffiliateId);
+    }
+
+    @Test
+    @DisplayName("Don't update corporative affiliate all attributes are null or blank")
+    void doNotUpdateCorpAffiliateAllAtributesAreNull(){
+        //for searh affiliate
+        Long corpAffiliateId = 1L;
+
+        //the main core of test
+        corpRequestDto.setNombreEmpresa(null);
+        corpRequestDto.setEmail(null);
+        corpRequestDto.setNombreCompleto(null);
+
+        //given
+        when(afiliadoRepository.findById(corpAffiliateId)).thenReturn(Optional.of(afiCorp));
+
+        //when
+        assertThatThrownBy(()->afiliadoServiceImp.actualizarAfiliadoCorporativoDto(corpAffiliateId,corpRequestDto))
+                .isInstanceOf(ReglaDeNegocioException.class)
+                .hasMessageContaining("Se ha intentado actualizar un afiliado corporativo, cuyos valores son vacions "+corpRequestDto);
+
+        //then
+        verify(afiliadoRepository).findById(corpAffiliateId);
+
     }
 }
