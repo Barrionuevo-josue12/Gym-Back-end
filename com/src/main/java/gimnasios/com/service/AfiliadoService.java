@@ -13,5 +13,6 @@ public interface AfiliadoService {
     public void borrarAfiliadoPorId (Long id);
     public List<AfiliadoDto>  listarAfiliados();
     public AfiliadoIndependienteDto obtenerAfiliadoIndPorId(Long id);
-    public AfiliadoCorporativoDto obtenerAfiliadoCorporId(long id);
+    public AfiliadoCorporativoDto obtenerAfiliadoCorporId(Long id);
+    public AfiliadoDto getAffiliateById(Long id);
 }

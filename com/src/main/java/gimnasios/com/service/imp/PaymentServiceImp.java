@@ -2,6 +2,7 @@ package gimnasios.com.service.imp;
 
 import gimnasios.com.domain.Afiliado;
 import gimnasios.com.domain.Payment;
+import gimnasios.com.dto.AfiliadoDto;
 import gimnasios.com.dto.PaymentDto;
 import gimnasios.com.dto.PaymentRequestDto;
 import gimnasios.com.exception.RecursoNoEncontradoException;
@@ -20,13 +21,13 @@ import java.util.List;
 public class PaymentServiceImp implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final AfiliadoRepository afiliadoRepository;
+    private final AfiliadoServiceImp afiliadoServiceImp;
     private final PaymentMapper paymentMapper;
 
     //builder pattern design
-    public PaymentServiceImp(PaymentRepository paymentRepository, AfiliadoRepository afiliadoRepository, PaymentMapper paymentMapper){
+    public PaymentServiceImp(PaymentRepository paymentRepository, AfiliadoServiceImp afiliadoServiceImp, PaymentMapper paymentMapper){
         this.paymentRepository = paymentRepository;
-        this.afiliadoRepository = afiliadoRepository;
+        this.afiliadoServiceImp = afiliadoServiceImp;
         this.paymentMapper = paymentMapper;
     }
 
@@ -35,9 +36,10 @@ public class PaymentServiceImp implements PaymentService {
     public PaymentDto createPayment(PaymentRequestDto dto) {
         log.info("Someone is trying to create a new payment");
         //UtilPayment.checkPaymentRequestDtoBeforeToCreate(dto)
-
+/*
         Afiliado afi = afiliadoRepository.findById(dto.getAfiliadoId()).orElseThrow(()->{log.error("Someone has tried to create a payment, with a non-exist affiliate id  {}", dto);
             return new RecursoNoEncontradoException("Affiliate with id: " + dto.getAfiliadoId() + " doesn't exist");});
+*/
 
         Payment paymentEntity = paymentMapper.toPagoEntity(dto);
         paymentEntity.setAfiliado(afi);
@@ -65,8 +67,8 @@ public class PaymentServiceImp implements PaymentService {
         return paymentEntity;
     }
 
-    @Override
-    @Transactional
+    @Override()
+    @Transactional()
     public PaymentDto findPaymentById(Long id) {
         Payment paymentEntity = foundPaymentOrThrowsException(id);
         return paymentMapper.toPagoDto(paymentEntity);
