@@ -36,11 +36,12 @@ public class PaymentServiceImp implements PaymentService {
     public PaymentDto createPayment(PaymentRequestDto dto) {
         log.info("Someone is trying to create a new payment");
         //UtilPayment.checkPaymentRequestDtoBeforeToCreate(dto)
-/*
+  /*
         Afiliado afi = afiliadoRepository.findById(dto.getAfiliadoId()).orElseThrow(()->{log.error("Someone has tried to create a payment, with a non-exist affiliate id  {}", dto);
             return new RecursoNoEncontradoException("Affiliate with id: " + dto.getAfiliadoId() + " doesn't exist");});
-*/
+  */
 
+        AfiliadoDto afiDto = afiliadoServiceImp.getAffiliateById(dto.getAfiliadoId());
         Payment paymentEntity = paymentMapper.toPagoEntity(dto);
         paymentEntity.setAfiliado(afi);
 

@@ -214,4 +214,12 @@ public class AfiliadoServiceImp implements AfiliadoService {
         Afiliado afi = foundAfiliateOrThrowException(id);
         return afiliadoMapper.toDto(afi);
     }
+    @Override
+    public Afiliado getAffiliateEntityById(Long id){
+        return afiliadoRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Affiliate   with ID: {} doesn't exist", id);
+                    return new RecursoNoEncontradoException("Affiliate with id: " + id + " doesn't exist");
+                });
+    }
 }

@@ -15,4 +15,5 @@ public interface AfiliadoService {
     public AfiliadoIndependienteDto obtenerAfiliadoIndPorId(Long id);
     public AfiliadoCorporativoDto obtenerAfiliadoCorporId(Long id);
     public AfiliadoDto getAffiliateById(Long id);
+    public Afiliado getAffiliateEntityById(Long id);
 }
