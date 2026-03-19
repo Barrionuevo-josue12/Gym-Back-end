@@ -10,11 +10,13 @@ import gimnasios.com.mapper.PaymentMapper;
 import gimnasios.com.repository.AfiliadoRepository;
 import gimnasios.com.repository.PaymentRepository;
 import gimnasios.com.service.PaymentService;
+import gimnasios.com.util.UtilPayment;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -35,13 +37,9 @@ public class PaymentServiceImp implements PaymentService {
     @Transactional
     public PaymentDto createPayment(PaymentRequestDto dto) {
         log.info("Someone is trying to create a new payment");
-        //UtilPayment.checkPaymentRequestDtoBeforeToCreate(dto)
-  /*
-        Afiliado afi = afiliadoRepository.findById(dto.getAfiliadoId()).orElseThrow(()->{log.error("Someone has tried to create a payment, with a non-exist affiliate id  {}", dto);
-            return new RecursoNoEncontradoException("Affiliate with id: " + dto.getAfiliadoId() + " doesn't exist");});
-  */
+        UtilPayment.checkPaymentRequestDtoBeforeToCreate(dto); //make this and build tests
 
-        AfiliadoDto afiDto = afiliadoServiceImp.getAffiliateById(dto.getAfiliadoId());
+        Afiliado afi = afiliadoServiceImp.getAffiliateEntityById(dto.getAfiliadoId());
         Payment paymentEntity = paymentMapper.toPagoEntity(dto);
         paymentEntity.setAfiliado(afi);
 
@@ -52,20 +50,25 @@ public class PaymentServiceImp implements PaymentService {
     @Transactional
     public PaymentDto updatePayment(Long id,PaymentRequestDto dto) {
         log.info("Someone is trying to update a payment");
-        //UtilPayment.checkPaymentRequestDtoBeforeToUpdate(dto);
-
         Payment paymentEntity = foundPaymentOrThrowsException(id);
 
+        UtilPayment.checkPaymentRequestDtoBeforeToUpdate(dto);
+
         paymentEntity = paymentMapper.toPaymentEntitySincePaymentrequestDto(paymentEntity,dto);
+
+        //to update a payment affiliate
+        if(dto.getAfiliadoId() != null && !dto.getAfiliadoId().equals(paymentEntity.getAfiliado().getAfiliadoId())){
+            Afiliado afiEntity = afiliadoServiceImp.getAffiliateEntityById(dto.getAfiliadoId());
+            paymentEntity.setAfiliado(afiEntity);
+        }
 
         return paymentMapper.toPagoDto(paymentRepository.save(paymentEntity));
     }
 
     private Payment foundPaymentOrThrowsException(Long id){
-        Payment paymentEntity = paymentRepository.findById(id)
+        return paymentRepository.findPaymentWithAfiliadoByIdPago((id))
                 .orElseThrow(()->{log.info("Payment with id: {} doesn't exist ",id);
                     return new RecursoNoEncontradoException("Payment with id: "+id+" doesn't exist");});
-        return paymentEntity;
     }
 
     @Override()
